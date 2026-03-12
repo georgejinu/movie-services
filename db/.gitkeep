@@ -1,0 +1,5 @@
+# Database files directory
+# This directory contains the SQLite database files:
+# - movies.db
+# - ratings.db
+
