@@ -99,6 +99,22 @@ The API is live at: **https://movie-services-production.up.railway.app**
 
 The deployment uses a multi-stage Docker build for optimized production images. All environment variables are configured in the Railway dashboard.
 
+### Railway Dashboard Screenshots
+
+Here's a look at the Railway deployment dashboard:
+
+#### Railway Project Overview
+
+![Railway Deployment Dashboard](Image/Deployment-1.png)
+
+This shows the Railway project dashboard with the deployed service, deployment history, and service status.
+
+#### Railway Deployment Details
+
+![Railway Deployment Details](Image/Deployment-2.png)
+
+This shows the detailed deployment view including build logs, deployment status, and service configuration.
+
 ## API Documentation
 
 I set up Swagger docs, so once the server is running, head over to:
