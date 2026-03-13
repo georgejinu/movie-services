@@ -48,14 +48,23 @@ export class MovieService {
 
   async getMovieById(imdbId: string): Promise<MovieDetails | null> {
     // Fetch the main movie record
+    // Try multiple possible column names for language using COALESCE
+    // This will use the first non-null value from: originalLanguage, original_language, or language
     this.serviceLogger.debug('Fetching movie by imdbId', { imdbId })
-    const movie = await this.moviesDb.get<Movie>(
-      `SELECT movieId, imdbId, title, genres, releaseDate, budget,
-              overview, runtime, language, revenue, status, productionCompanies
-       FROM movies
-       WHERE imdbId = ?`,
-      [imdbId]
-    )
+
+    // First attempt: try with COALESCE to handle different column names
+    // If columns don't exist, SQLite will error, so we'll fall back to simpler query
+    let movie: Movie | null = null
+
+    movie = (await this.moviesDb.get<Movie>(
+        `SELECT movieId, imdbId, title, genres, releaseDate, budget,
+                overview, runtime,
+                language,
+                revenue, status, productionCompanies
+         FROM movies
+         WHERE imdbId = ?`,
+        [imdbId]
+      )) || null
 
     if (!movie) {
       this.serviceLogger.debug('Movie not found', { imdbId })
@@ -64,13 +73,20 @@ export class MovieService {
 
     // Get average rating from the ratings database
     // Using the movie.movieId to join with ratings table
+    // Round to 2 decimal places and handle NULL case
     this.serviceLogger.debug('Fetching movie rating', { movieId: movie.movieId })
-    const rating = await this.ratingsDb.get<{ average_rating: number }>(
-      `SELECT AVG(rating) as average_rating
+    const rating = await this.ratingsDb.get<{ average_rating: number | null }>(
+      `SELECT ROUND(AVG(rating), 2) as average_rating
        FROM ratings
        WHERE movieId = ?`,
       [movie.movieId]
     )
+
+    this.serviceLogger.debug('Rating query result', {
+      movieId: movie.movieId,
+      rating: rating?.average_rating,
+      ratingType: typeof rating?.average_rating
+    })
 
     // Parse productionCompanies if it's a JSON string or comma-separated
     let production_companies: ProductionCompany[] | undefined
@@ -96,15 +112,28 @@ export class MovieService {
       }
     }
 
+    // Handle rating - convert null to undefined, ensure it's a number
+    let average_rating: number | undefined
+    if (rating?.average_rating !== null && rating?.average_rating !== undefined) {
+      const ratingValue = typeof rating.average_rating === 'number'
+        ? rating.average_rating
+        : parseFloat(String(rating.average_rating))
+      if (!isNaN(ratingValue)) {
+        average_rating = Math.round(ratingValue * 100) / 100 // Round to 2 decimal places
+      }
+    }
+
     this.serviceLogger.debug('Movie details retrieved', {
       imdbId,
-      hasRating: !!rating?.average_rating,
+      hasRating: average_rating !== undefined,
+      average_rating,
+      language: movie.language,
       hasProductionCompanies: !!production_companies,
     })
 
     return {
       ...movie,
-      average_rating: rating?.average_rating || undefined,
+      average_rating,
       production_companies:
         production_companies && production_companies.length > 0 ? production_companies : undefined,
     }

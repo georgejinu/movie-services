@@ -72,6 +72,33 @@ The server will start on whatever port you set in `.env` (default is 3000). You 
 
 Once it's running, you can check the health endpoint at `http://localhost:3000/health` to make sure everything's working.
 
+## Deployment
+
+This API is deployed on **Railway** using Docker. Railway automatically detects the Dockerfile and builds/deploys the application on every push to the main branch.
+
+### Production URL
+
+The API is live at: **https://movie-services-production.up.railway.app**
+
+### Example Production Endpoints
+
+- **Health Check:** https://movie-services-production.up.railway.app/health
+- **API Documentation:** https://movie-services-production.up.railway.app/api-docs
+- **List Movies:** https://movie-services-production.up.railway.app/api/movies?page=1
+- **Movie Details:** https://movie-services-production.up.railway.app/api/movies/tt0069049
+- **Movies by Year:** https://movie-services-production.up.railway.app/api/movies/year/2020?page=1
+- **Movies by Genre:** https://movie-services-production.up.railway.app/api/movies/genre/Action?page=1
+
+### Railway Deployment Details
+
+- **Platform:** Railway (https://railway.app)
+- **Deployment Method:** Docker (automatic build from Dockerfile)
+- **Auto-Deploy:** Enabled (deploys on push to main branch)
+- **Environment:** Production
+- **HTTPS:** Enabled (automatic SSL certificate)
+
+The deployment uses a multi-stage Docker build for optimized production images. All environment variables are configured in the Railway dashboard.
+
 ## API Documentation
 
 I set up Swagger docs, so once the server is running, head over to:
@@ -81,6 +108,88 @@ http://localhost:3000/api-docs
 ```
 
 This gives you an interactive interface to test all the endpoints. Much easier than trying to remember curl commands.
+
+**Production Swagger UI:** https://movie-services-production.up.railway.app/api-docs
+
+## API Screenshots
+
+Here are some screenshots showing the API in action:
+
+### List All Movies (Page 1)
+
+**API URL:** `GET /api/movies?page=1`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies?page=1
+
+![List All Movies](Image/api_movies.png)
+
+### List All Movies (Page 2)
+
+**API URL:** `GET /api/movies?page=2`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies?page=2
+
+![List All Movies Page 2](Image/api_movies_page2.png)
+
+### Get Movie Details
+
+**API URL:** `GET /api/movies/:imdbId`
+
+**Example:** `GET /api/movies/tt0069049`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/tt0069049
+
+![Movie Details](Image/api_movies_Details.png)
+
+### Movies by Year (2020)
+
+**API URL:** `GET /api/movies/year/2020?page=1`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/year/2020?page=1
+
+![Movies by Year 2020](Image/api_movies_year_2020.png)
+
+### Movies by Year - Ascending Order
+
+**API URL:** `GET /api/movies/year/2020?page=1&sortOrder=asc`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/year/2020?page=1&sortOrder=asc
+
+![Movies by Year Ascending](Image/api_movies_year_asc.png)
+
+### Movies by Year - Descending Order
+
+**API URL:** `GET /api/movies/year/2020?page=1&sortOrder=desc`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/year/2020?page=1&sortOrder=desc
+
+![Movies by Year Descending](Image/api_movies_year_desc.png)
+
+### Movies by Genre
+
+**API URL:** `GET /api/movies/genre/:genre?page=1`
+
+**Example:** `GET /api/movies/genre/Action?page=1`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/genre/Action?page=1
+
+![Movies by Genre](Image/api_movies_genre.png)
+
+### Movies by Genre - Action (Page 1)
+
+**API URL:** `GET /api/movies/genre/Action?page=1`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/genre/Action?page=1
+
+![Movies by Genre Action](Image/api_movies_genre_Action_page1.png)
+
+### Movies by Genre - Comedy (Page 3)
+
+**API URL:** `GET /api/movies/genre/Comedy?page=3`
+
+**Production:** https://movie-services-production.up.railway.app/api/movies/genre/Comedy?page=3
+
+![Movies by Genre Comedy Page 3](Image/api_movies_genre_Comedy_page3.png)
 
 ## What You Can Do
 
