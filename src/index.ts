@@ -15,6 +15,18 @@ const appLogger = logger('server')
 
 const app = express()
 
+// CORS middleware for Swagger UI
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200)
+  } else {
+    next()
+  }
+})
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(requestLoggingMiddleware)
@@ -62,14 +74,13 @@ app.get('/', (_req: Request, res: Response) => {
   })
 })
 
-// Swagger documentation with dynamic server URL
-app.use('/api-docs', swaggerUi.serve, (req: Request, res: Response, next: NextFunction) => {
-  // Update Swagger spec with dynamic server URL based on request
+// Helper function to get Swagger spec with dynamic server URL
+const getSwaggerSpecWithUrl = (req: Request) => {
   const protocol = req.protocol || (req.get('x-forwarded-proto') || 'http')
   const host = req.get('host') || `localhost:${config.port}`
   const serverUrl = `${protocol}://${host}`
 
-  const swaggerSpecWithUrl = {
+  return {
     ...swaggerSpec,
     servers: [
       {
@@ -78,7 +89,25 @@ app.use('/api-docs', swaggerUi.serve, (req: Request, res: Response, next: NextFu
       },
     ],
   }
-  swaggerUi.setup(swaggerSpecWithUrl)(req, res, next)
+}
+
+// Swagger JSON spec endpoint
+app.get('/api-docs.json', (req: Request, res: Response) => {
+  const spec = getSwaggerSpecWithUrl(req)
+  res.setHeader('Content-Type', 'application/json')
+  res.send(spec)
+})
+
+// Swagger UI documentation
+app.use('/api-docs', swaggerUi.serve, (req: Request, res: Response, next: NextFunction) => {
+  const spec = getSwaggerSpecWithUrl(req)
+  swaggerUi.setup(spec, {
+    customCssUrl: null,
+    customSiteTitle: 'Movie Services API',
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })(req, res, next)
 })
 
 // Initialize services with dependency injection
