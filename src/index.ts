@@ -48,6 +48,20 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// Root route for Railway health checks
+app.get('/', (_req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    message: 'Movie Services API',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      apiDocs: '/api-docs',
+      movies: '/api/movies'
+    }
+  })
+})
+
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
