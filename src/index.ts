@@ -102,7 +102,6 @@ app.get('/api-docs.json', (req: Request, res: Response) => {
 app.use('/api-docs', swaggerUi.serve, (req: Request, res: Response, next: NextFunction) => {
   const spec = getSwaggerSpecWithUrl(req)
   swaggerUi.setup(spec, {
-    customCssUrl: null,
     customSiteTitle: 'Movie Services API',
     swaggerOptions: {
       persistAuthorization: true,
