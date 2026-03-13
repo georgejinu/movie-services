@@ -67,10 +67,21 @@ async function initializeServices(): Promise<void> {
 
 async function startServer(): Promise<void> {
   try {
+    // Log startup information (also to console for Railway visibility)
+    console.log(`Starting server on port ${config.port}...`)
+    appLogger.info('Starting server...', {
+      port: config.port,
+      nodeEnv: config.nodeEnv,
+      moviesDbPath: config.moviesDbPath,
+      ratingsDbPath: config.ratingsDbPath,
+    })
+
     // Connect to both databases before starting the server
+    console.log('Connecting to databases...')
     appLogger.info('Connecting to databases...')
     await moviesDb.connect()
     await ratingsDb.connect()
+    console.log('Database connections established')
     appLogger.info('Database connections established', {
       moviesDb: config.moviesDbPath,
       ratingsDb: config.ratingsDbPath,
@@ -79,15 +90,36 @@ async function startServer(): Promise<void> {
     // Initialize services after database connections
     await initializeServices()
 
-    app.listen(config.port, '0.0.0.0', () => {
+    const server = app.listen(config.port, '0.0.0.0', () => {
+      const address = server.address()
+      console.log(`Server started successfully on port ${config.port}`)
+      console.log(`Server address: ${JSON.stringify(address)}`)
       appLogger.info('Server started successfully', {
         port: config.port,
+        address: server.address(),
         environment: config.nodeEnv,
       })
     })
+
+    // Handle server errors
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      console.error('Server error:', error)
+      appLogger.error('Server error', { error, port: config.port })
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${config.port} is already in use`)
+        appLogger.error(`Port ${config.port} is already in use`)
+      }
+      process.exit(1)
+    })
   } catch (error) {
-    appLogger.error('Failed to start server', { error })
-    process.exit(1)
+    console.error('Failed to start server:', error)
+    appLogger.error('Failed to start server', {
+      error,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    })
+    // Give time for logs to flush before exiting
+    setTimeout(() => process.exit(1), 1000)
   }
 }
 
