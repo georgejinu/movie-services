@@ -15,6 +15,9 @@ const appLogger = logger('server')
 
 const app = express()
 
+// Trust proxy for correct protocol detection (needed for Railway/cloud platforms)
+app.set('trust proxy', true)
+
 // CORS middleware for Swagger UI
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.header('Access-Control-Allow-Origin', '*')
@@ -76,7 +79,17 @@ app.get('/', (_req: Request, res: Response) => {
 
 // Helper function to get Swagger spec with dynamic server URL
 const getSwaggerSpecWithUrl = (req: Request) => {
-  const protocol = req.protocol || (req.get('x-forwarded-proto') || 'http')
+  // Prioritize x-forwarded-proto header (set by Railway/proxies), then req.protocol, then default
+  // In production, default to HTTPS to avoid mixed content errors
+  let protocol = req.get('x-forwarded-proto') || req.protocol
+  if (!protocol) {
+    protocol = config.nodeEnv === 'production' ? 'https' : 'http'
+  }
+  // Ensure protocol is https in production to avoid mixed content
+  if (config.nodeEnv === 'production' && protocol !== 'https') {
+    protocol = 'https'
+  }
+
   const host = req.get('host') || `localhost:${config.port}`
   const serverUrl = `${protocol}://${host}`
 
