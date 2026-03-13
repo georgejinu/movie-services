@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import swaggerUi from 'swagger-ui-express'
 import { moviesDb, ratingsDb } from './config/database'
 import { config } from './config/config'
@@ -62,8 +62,24 @@ app.get('/', (_req: Request, res: Response) => {
   })
 })
 
-// Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+// Swagger documentation with dynamic server URL
+app.use('/api-docs', swaggerUi.serve, (req: Request, res: Response, next: NextFunction) => {
+  // Update Swagger spec with dynamic server URL based on request
+  const protocol = req.protocol || (req.get('x-forwarded-proto') || 'http')
+  const host = req.get('host') || `localhost:${config.port}`
+  const serverUrl = `${protocol}://${host}`
+
+  const swaggerSpecWithUrl = {
+    ...swaggerSpec,
+    servers: [
+      {
+        url: serverUrl,
+        description: config.nodeEnv === 'production' ? 'Production server' : 'Development server',
+      },
+    ],
+  }
+  swaggerUi.setup(swaggerSpecWithUrl)(req, res, next)
+})
 
 // Initialize services with dependency injection
 let movieService: MovieService

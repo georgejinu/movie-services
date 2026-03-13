@@ -1,6 +1,24 @@
 import swaggerJsdoc from 'swagger-jsdoc'
 import { config } from './config'
 
+// Determine the correct paths based on environment
+// In production (Docker), try both dist/ (compiled JS with preserved comments) and src/ (original TS)
+// In development, use src/ TypeScript files
+const isProduction = config.nodeEnv === 'production'
+const apiPaths = isProduction
+  ? ['./dist/routes/*.js', './dist/index.js', './src/routes/*.ts', './src/index.ts']
+  : ['./src/routes/*.ts', './src/index.ts']
+
+// Determine server URL based on environment
+const getServerUrl = () => {
+  // Check if we're in Railway or another cloud platform
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+  }
+  // For local development
+  return `http://localhost:${config.port}`
+}
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -14,8 +32,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${config.port}`,
-        description: 'Development server',
+        url: getServerUrl(),
+        description: config.nodeEnv === 'production' ? 'Production server' : 'Development server',
       },
     ],
     components: {
@@ -179,7 +197,7 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ['./src/routes/*.ts', './src/index.ts'],
+  apis: apiPaths, // Use dynamic paths based on environment
 }
 
 export const swaggerSpec = swaggerJsdoc(options)

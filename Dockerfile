@@ -33,6 +33,9 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy source files for Swagger documentation (swagger-jsdoc needs to read files)
+COPY --from=builder /app/src ./src
+
 # Copy database directory (if databases are included)
 COPY db ./db
 
