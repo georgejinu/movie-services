@@ -79,7 +79,7 @@ async function startServer(): Promise<void> {
     // Initialize services after database connections
     await initializeServices()
 
-    app.listen(config.port, () => {
+    app.listen(config.port, '0.0.0.0', () => {
       appLogger.info('Server started successfully', {
         port: config.port,
         environment: config.nodeEnv,

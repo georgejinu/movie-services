@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3'
 import path from 'path'
+import fs from 'fs'
 import { config } from './config'
 import { logger } from '../utils/logger'
 
@@ -16,6 +17,13 @@ export class Database {
   constructor(private dbPath: string) {}
 
   async connect(): Promise<void> {
+    // Ensure directory exists
+    const dbDir = path.dirname(this.dbPath)
+    if (!fs.existsSync(dbDir)) {
+      dbLogger.debug('Creating database directory', { path: dbDir })
+      fs.mkdirSync(dbDir, { recursive: true })
+    }
+
     // Promisify the connection to work with async/await
     dbLogger.debug('Connecting to database', { path: this.dbPath })
     return new Promise((resolve, reject) => {
